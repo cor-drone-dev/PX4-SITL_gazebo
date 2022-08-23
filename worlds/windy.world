@@ -16,14 +16,17 @@
       <frameId>base_link</frameId>
       <robotNamespace/>
       <xyzOffset>1 0 0</xyzOffset>
-      <windDirectionMean>0 1 0</windDirectionMean>
+      <windDirectionMean>1 0 0</windDirectionMean>
       <windVelocityMean>4.0</windVelocityMean>
       <windGustDirection>0 0 0</windGustDirection>
-      <windGustDuration>0</windGustDuration>
+      <windGustDuration>100</windGustDuration>
       <windGustStart>0</windGustStart>
-      <windGustVelocityMean>0</windGustVelocityMean>
+      <windGustVelocityMean>4.0</windGustVelocityMean>
       <windPubTopic>world_wind</windPubTopic>
+      <useCustomStaticWindField>True</useCustomStaticWindField>
+      <customWindFieldPath>/home/johanna/MasterThesis/Wind_data/wind_field/uniform_xy.txt</customWindFieldPath>
     </plugin>
+    <plugin name='ros_interface_plugin' filename='libgazebo_ros_interface_plugin.so'/>
     <physics name='default_physics' default='0' type='ode'>
       <gravity>0 0 -9.8066</gravity>
       <ode>

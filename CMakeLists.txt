@@ -37,8 +37,11 @@ include(GNUInstallDirs)
 #######################
 
 option(BUILD_GSTREAMER_PLUGIN "enable gstreamer plugin" ON)
-option(BUILD_ROS_PLUGINS "Enable building ROS dependent plugins" OFF)
+option(BUILD_ROS_PLUGINS "Enable building ROS dependent plugins" ON)
 option(GENERATE_ROS_MODELS "Generate model sdf for ROS environment" OFF)
+
+set(BUILD_ROS_PLUGINS ON)
+message(STATUS "Building ROS dependent plugins: ${BUILD_ROS_PLUGINS}")
 
 option(SEND_VISION_ESTIMATION_DATA "Send Mavlink VISION_POSITION_ESTIMATE msgs" OFF)
 option(SEND_ODOMETRY_DATA "Send Mavlink ODOMETRY msgs" OFF)
@@ -412,13 +415,25 @@ if (BUILD_ROS_PLUGINS)
   list(APPEND plugins gazebo_motor_failure_plugin)
   message(STATUS "adding gazebo_motor_failure_plugin to build")
 
+  add_library(gazebo_ros_interface_plugin SHARED src/gazebo_ros_interface_plugin.cpp)
+  target_link_libraries(gazebo_ros_interface_plugin ${GAZEBO_libraries} ${roscpp_LIBRARIES})
+  list(APPEND plugins gazebo_ros_interface_plugin)
+  message(STATUS "adding gazebo_ros_interface_plugin to build")
+
   include_directories(
     include
     ${geometry_msgs_INCLUDE_DIRS}
+    ${mav_msgs_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS}
   )
 
   target_link_libraries(gazebo_motor_failure_plugin
+    ${catkin_LIBRARIES}
+    ${roscpp_LIBRARIES}
+    ${GAZEBO_libraries}
+  )
+
+  target_link_libraries(gazebo_ros_interface_plugin
     ${catkin_LIBRARIES}
     ${roscpp_LIBRARIES}
     ${GAZEBO_libraries}
