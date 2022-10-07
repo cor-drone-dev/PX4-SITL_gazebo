@@ -1116,6 +1116,16 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
       input_reference_[i] = (actuator_controls[input_index_[i]] + input_offset_[i])
           * input_scaling_[i] + zero_position_armed_[i];
       // std::cout << input_reference_ << ", ";
+
+      // double cmd_in = actuator_controls[input_index_[i]];
+      // Single rotor curve
+      // input_reference_[i] = -230 * std::pow(cmd_in, 2) + 1231 * cmd_in + 112;
+
+      // Double rotor curve
+      // input_reference_[i] = -265 * std::pow(cmd_in, 2) + 1215 * cmd_in + 108;
+
+      // Quad rotor curve
+      // input_reference_[i] = -362 * std::pow(cmd_in, 2) + 1139 * cmd_in + 95;
     } else {
       input_reference_[i] = zero_position_disarmed_[i];
       // std::cout << input_reference_ << ", ";
