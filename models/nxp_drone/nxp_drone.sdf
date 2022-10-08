@@ -7,7 +7,7 @@
     <static>false</static>
     <link name="fuselage">
       <inertial>
-        <mass>2.0</mass>
+        <mass>2.2</mass>
         <inertia>
           <ixx>0.02166666666666667</ixx>
           <iyy>0.02166666666666667</iyy>
