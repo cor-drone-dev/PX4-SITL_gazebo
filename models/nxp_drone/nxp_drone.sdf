@@ -408,8 +408,13 @@
       <motorSpeedPubTopic>/motor_speed/1</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    
-      
+    <plugin name='rotor_1_tachometer' filename='libgazebo_ros_tachometer.so'>
+      <robotNamespace></robotNamespace>
+      <jointName>rotor_1_joint</jointName>
+      <turningDirection>ccw</turningDirection>
+      <motorSpeedPubTopic>/motor_0</motorSpeedPubTopic>
+      <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+    </plugin>
       
       
       
@@ -534,7 +539,14 @@
       <motorSpeedPubTopic>/motor_speed/2</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    
+    <plugin name='rotor_2_tachometer' filename='libgazebo_ros_tachometer.so'>
+      <robotNamespace></robotNamespace>
+      <jointName>rotor_2_joint</jointName>
+      <turningDirection>ccw</turningDirection>
+      <motorSpeedPubTopic>/motor_2</motorSpeedPubTopic>
+      <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
+    </plugin>
+      
       
       
       
