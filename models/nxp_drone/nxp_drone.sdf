@@ -2,7 +2,9 @@
 <!-- DO NOT EDIT: Generated from nxp_drone.sdf.jinja -->
 <sdf version='1.6'>
   <model name='nxp_drone'>
+    <!-- Switch pose in case quadcopter is to be locked to the floor -->
     <pose>0 0 0 0 0 0</pose>
+    <!-- <pose>0 0 .5 0 0 0</pose> -->
     <self_collide>false</self_collide>
     <static>false</static>
     <link name="fuselage">
@@ -155,6 +157,26 @@
         <use_parent_model_frame>1</use_parent_model_frame>
       </axis>
     </joint>
+
+    <!-- <joint name='lock_drone' type='revolute'>
+      <child>fuselage</child>
+      <parent>world</parent>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint> -->
 
     
       
