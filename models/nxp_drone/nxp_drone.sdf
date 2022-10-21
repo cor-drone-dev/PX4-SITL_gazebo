@@ -11,9 +11,9 @@
       <inertial>
         <mass>2.2</mass>
         <inertia>
-          <ixx>0.02166666666666667</ixx>
-          <iyy>0.02166666666666667</iyy>
-          <izz>0.04000000000000001</izz>
+          <ixx>0.028</ixx>
+          <iyy>0.033</iyy>
+          <izz>0.038</izz>
         </inertia>
       </inertial>
       <gravity>true</gravity>
@@ -731,7 +731,7 @@
         <pubRate>30</pubRate>
         <randomWalk>0</randomWalk>
         <noiseDensity>0</noiseDensity>
-        <corellationTime>0</corellationTime>
+        <corellationTime>0.01</corellationTime>
     </plugin>
     <plugin name='mavlink_interface' filename='libgazebo_mavlink_interface.so'>
       <robotNamespace/>
