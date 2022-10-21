@@ -176,8 +176,13 @@
         </dynamics>
         <use_parent_model_frame>1</use_parent_model_frame>
       </axis>
-    </joint> -->
-
+    </joint>
+    <plugin name="ft_sensor_plugin" filename="libgazebo_ros_ft_sensor.so">
+      <updateRate>50</updateRate>
+      <topicName>ft_sensor</topicName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <jointName>lock_drone</jointName>
+    </plugin> -->
     
       
       
