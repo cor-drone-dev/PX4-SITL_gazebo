@@ -776,7 +776,7 @@ void GazeboMavlinkInterface::SendGroundTruth()
   if (!hil_mode_ || (hil_mode_ && hil_state_level_)) {
     mavlink_message_t msg;
     mavlink_msg_hil_state_quaternion_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &hil_state_quat);
-    mavlink_interface_->send_mavlink_message(&msg);
+    // mavlink_interface_->send_mavlink_message(&msg);
   }
 }
 
@@ -1111,21 +1111,47 @@ void GazeboMavlinkInterface::handle_actuator_controls() {
 
   Eigen::VectorXd actuator_controls = mavlink_interface_->GetActuatorControls();
   if (actuator_controls.size() < n_out_max) return; //TODO: Handle this properly
+
+  double total_command = 0;
+  for (int i = 0; i < 4; i++) {
+    total_command += actuator_controls[input_index_[i]];
+  }
+
+  double scalar = total_command / 4;
+
+  // std::cout << "controls: " << actuator_controls[input_index_[0]] << ", "<< actuator_controls[input_index_[1]] << ", " << actuator_controls[input_index_[2]] << ", "<< actuator_controls[input_index_[3]] << ", " << "scalar: " << scalar << std::endl;
+  //  << " single rotor: " << single_rotor_ref_ << " quad rotor: " << quad_rotor_ref_ << std::endl;
+
   for (int i = 0; i < input_reference_.size(); i++) {
     if (armed) {
       input_reference_[i] = (actuator_controls[input_index_[i]] + input_offset_[i])
           * input_scaling_[i] + zero_position_armed_[i];
       // std::cout << input_reference_ << ", ";
 
-      // double cmd_in = actuator_controls[input_index_[i]];
+
+      double cmd_in = actuator_controls[input_index_[i]];
+      // double single_rotor_ref_ = -230 * std::pow(cmd_in, 2) + 1231 * cmd_in + 112;
+      // double quad_rotor_ref_ = -362 * std::pow(cmd_in, 2) + 1139 * cmd_in + 95;
+
+      // double relationship = cmd_in / (total_command / 4);
+
+      // input_reference_[i] = scalar * quad_rotor_ref_ + (1 - scalar) * single_rotor_ref_;
+      
       // Single rotor curve
       // input_reference_[i] = -230 * std::pow(cmd_in, 2) + 1231 * cmd_in + 112;
 
       // Double rotor curve
       // input_reference_[i] = -265 * std::pow(cmd_in, 2) + 1215 * cmd_in + 108;
 
-      // Quad rotor curve
-      // input_reference_[i] = -362 * std::pow(cmd_in, 2) + 1139 * cmd_in + 95;
+      // Quad rotor curve (normal + reserve mean)
+      // input_reference_[i] = -287 * std::pow(cmd_in, 2) + 1070 * cmd_in + 101;
+      
+      // Use this one:
+      // input_reference_[i] = -362 * std::pow(cmd_in, 2) + 1138 * cmd_in + 95;
+
+
+      // Mean of single + double + thrust + reverse thrust curve:
+      // input_reference_[i] = -269  * std::pow(cmd_in, 2) + 1154 * cmd_in + 105;
     } else {
       input_reference_[i] = zero_position_disarmed_[i];
       // std::cout << input_reference_ << ", ";
