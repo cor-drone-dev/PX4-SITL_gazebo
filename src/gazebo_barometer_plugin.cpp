@@ -155,34 +155,34 @@ void BarometerPlugin::OnUpdate(const common::UpdateInfo&)
     const float absolute_pressure = pressure_msl / pressure_ratio;
 
     // generate Gaussian noise sequence using polar form of Box-Muller transformation
-    double y1;
-    {
-      double x1, x2, w;
-      if (!baro_rnd_use_last_) {
-        do {
-          x1 = 2.0 * standard_normal_distribution_(random_generator_) - 1.0;
-          x2 = 2.0 * standard_normal_distribution_(random_generator_) - 1.0;
-          w = x1 * x1 + x2 * x2;
-        } while ( w >= 1.0 );
-        w = sqrt( (-2.0 * log( w ) ) / w );
-        // calculate two values - the second value can be used next time because it is uncorrelated
-        y1 = x1 * w;
-        baro_rnd_y2_ = x2 * w;
-        baro_rnd_use_last_ = true;
-      } else {
-        // no need to repeat the calculation - use the second value from last update
-        y1 = baro_rnd_y2_;
-        baro_rnd_use_last_ = false;
-      }
-    }
+    // double y1;
+    // {
+    //   double x1, x2, w;
+    //   if (!baro_rnd_use_last_) {
+    //     do {
+    //       x1 = 2.0 * standard_normal_distribution_(random_generator_) - 1.0;
+    //       x2 = 2.0 * standard_normal_distribution_(random_generator_) - 1.0;
+    //       w = x1 * x1 + x2 * x2;
+    //     } while ( w >= 1.0 );
+    //     w = sqrt( (-2.0 * log( w ) ) / w );
+    //     // calculate two values - the second value can be used next time because it is uncorrelated
+    //     y1 = x1 * w;
+    //     baro_rnd_y2_ = x2 * w;
+    //     baro_rnd_use_last_ = true;
+    //   } else {
+    //     // no need to repeat the calculation - use the second value from last update
+    //     y1 = baro_rnd_y2_;
+    //     baro_rnd_use_last_ = false;
+    //   }
+    // }
 
     // Apply noise and drift
-    const float abs_pressure_noise = 1.0f * (float)y1;  // 1 Pa RMS noise
-    baro_drift_pa_ += baro_drift_pa_per_sec_ * dt;
-    const float absolute_pressure_noisy = absolute_pressure + abs_pressure_noise + baro_drift_pa_;
+    // const float abs_pressure_noise = 1.0f * (float)y1;  // 1 Pa RMS noise
+    // baro_drift_pa_ += baro_drift_pa_per_sec_ * dt;
+    // const float absolute_pressure_noisy = absolute_pressure + abs_pressure_noise + baro_drift_pa_;
 
     // convert to hPa
-    const float absolute_pressure_noisy_hpa = absolute_pressure_noisy * 0.01f;
+    const float absolute_pressure_noisy_hpa = absolute_pressure * 0.01f;
     baro_msg_.set_absolute_pressure(absolute_pressure_noisy_hpa);
 
     // calculate density using an ISA model for the tropsphere (valid up to 11km above MSL)
@@ -190,8 +190,7 @@ void BarometerPlugin::OnUpdate(const common::UpdateInfo&)
     const float rho = 1.225f / density_ratio;
 
     // calculate pressure altitude including effect of pressure noise
-    baro_msg_.set_pressure_altitude(alt_msl -
-                                    (abs_pressure_noise + baro_drift_pa_) /
+    baro_msg_.set_pressure_altitude(alt_msl  /
                                         (gravity_W_.Length() * rho));
 
     // calculate temperature in Celsius

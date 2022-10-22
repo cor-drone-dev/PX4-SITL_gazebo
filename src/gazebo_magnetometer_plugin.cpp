@@ -206,7 +206,7 @@ void MagnetometerPlugin::OnUpdate(const common::UpdateInfo&)
     ignition::math::Vector3d magnetic_field_B = q_body_to_world.RotateVectorReverse(magnetic_field_I);
     // Magnetometer noise
     Eigen::Vector3d measured_mag(magnetic_field_B.X(), magnetic_field_B.Y(), magnetic_field_B.Z());
-    addNoise(&measured_mag, dt);
+    // addNoise(&measured_mag, dt);
 
     // Fill magnetometer messgae
     mag_message_.set_time_usec(current_time.Double() * 1e6);
