@@ -489,6 +489,8 @@ endif()
 ################
 ## Unit Tests ##
 ################
+set(CATKIN_ENABLE_TESTING "no")
+
 include(UnitTests)
 
 add_subdirectory(unit_tests)
