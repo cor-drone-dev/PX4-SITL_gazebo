@@ -36,6 +36,10 @@
 #include "Float.pb.h"
 #include "Wind.pb.h"
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 #include "common.h"
 
 
@@ -117,6 +121,10 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   std::string link_name_;
   std::string motor_speed_pub_topic_;
   std::string namespace_;
+
+  ofstream output_file_;
+  vector<string> output_list_;
+
 
   int motor_number_;
   int turning_direction_;

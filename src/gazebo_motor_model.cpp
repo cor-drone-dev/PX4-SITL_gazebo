@@ -27,6 +27,14 @@ namespace gazebo {
 GazeboMotorModel::~GazeboMotorModel() {
   updateConnection_->~Connection();
   use_pid_ = false;
+  std::cout << "Writing to file, output size: " << output_list_.size() << std::endl;
+  output_file_.open("/home/michiel/uav_mpcc/model_forces/" + link_name_ + ".csv");
+  output_file_ << "timestamp,raw_thrust,scalar,thrust,rotor_drag_x,rotor_drag_y,rotor_drag_z,rotor_torque,torque_x,torque_y,torque_z,rolling_moment_x,rolling_moment_y,rolling_moment_z,requested_rotor_velocity,actual_rotor_velocity,body_velocity_x,body_velocity_y,body_velocity_z,joint_axis_x,joint_axis_y,joint_axis_z,body_pose_x,body_pose_y,body_pose_z,body_orientation_x,body_orientation_y,body_orientation_z,body_orientation_w,pose_difference_x,pose_difference_y,pose_difference_z,pose_difference_w,fuselage_force_x,fuselage_force_y,fuselage_force_z,fuselage_torque_x,fuselage_torque_y,fuselage_torque_z\n";
+  for (string line : output_list_) {
+    output_file_ << line;
+  }
+  output_file_.close();
+  std::cout << "Done writing to file." << std::endl;
 }
 
 void GazeboMotorModel::InitializeParams() {}
@@ -229,6 +237,7 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   // - \omega * \lambda_1 * V_A^{\perp}
   ignition::math::Vector3d velocity_perpendicular_to_rotor_axis = relative_wind_velocity - (relative_wind_velocity.Dot(joint_axis)) * joint_axis;
   ignition::math::Vector3d air_drag = -std::abs(real_motor_velocity) * rotor_drag_coefficient_ * velocity_perpendicular_to_rotor_axis;
+  // std::cout << velocity_perpendicular_to_rotor_axis.X() << ", " << velocity_perpendicular_to_rotor_axis.Y() << ", " << velocity_perpendicular_to_rotor_axis.Z() << std::endl;
   // Apply air_drag to link.
   link_->AddForce(air_drag);
   // Moments
@@ -236,14 +245,22 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   physics::Link_V parent_links = link_->GetParentJointsLinks();
   // The tansformation from the parent_link to the link_.
 #if GAZEBO_MAJOR_VERSION >= 9
-  ignition::math::Pose3d pose_difference = link_->WorldCoGPose() - parent_links.at(0)->WorldCoGPose();
+  ignition::math::Pose3d pose_difference = joint_->WorldPose() - parent_links.at(0)->WorldPose();
+  // ignition::math::Pose3d pose_difference = joint_->Anchor();
 #else
   ignition::math::Pose3d pose_difference = ignitionFromGazeboMath(link_->GetWorldCoGPose() - parent_links.at(0)->GetWorldCoGPose());
 #endif
+
   ignition::math::Vector3d drag_torque(0, 0, -turning_direction_ * force * moment_constant_);
   // Transforming the drag torque into the parent frame to handle arbitrary rotor orientations.
   ignition::math::Vector3d drag_torque_parent_frame = pose_difference.Rot().RotateVector(drag_torque);
-  parent_links.at(0)->AddRelativeTorque(drag_torque_parent_frame);
+  // parent_links.at(0)->AddRelativeTorque(drag_torque_parent_frame);
+  parent_links.at(0)->AddTorque(drag_torque);
+  // if (link_name_ == "rotor_0") {
+    // std::cout << joint_->AxisFrameOffset(0) << ", error: " << joint_->AnchorErrorPose() << std::endl;
+    // std::cout << pose_difference.Rot().Euler() << std::endl; 
+    // std::cout << drag_torque << std::endl;
+  // }
 
   ignition::math::Vector3d rolling_moment;
   // - \omega * \mu_1 * V_A^{\perp}
@@ -277,6 +294,18 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
 #else
   joint_->SetVelocity(0, turning_direction_ * ref_motor_rot_vel / rotor_velocity_slowdown_sim_);
 #endif /* if 0 */
+
+  ignition::math::Pose3d body_pose = parent_links.at(0)->WorldCoGPose();
+  ignition::math::Quaternion body_orientation = body_pose.Rot();
+
+  physics::LinkPtr fuselage = parent_links.at(0);
+  ignition::math::Vector3d fuselage_force = fuselage->RelativeForce();
+  ignition::math::Vector3d fuselage_torque = fuselage->RelativeTorque();
+
+  std::stringstream msg;
+  msg << prev_sim_time_ << ", " << force << ", " << scalar << ", " << force * scalar << ", " << air_drag.X() << ", " << air_drag.Y() << ", " << air_drag.Z() << ", " << drag_torque.Z() << ", " << drag_torque_parent_frame.X() << ", " << drag_torque_parent_frame.Y() << ", " << drag_torque_parent_frame.Z() << ", "  << rolling_moment.X() << ", " << rolling_moment.Y() << ", " << rolling_moment.Z() << ", " << ref_motor_rot_vel_ << ", " << ref_motor_rot_vel << "," << body_velocity.X() << "," << body_velocity.Y() << "," << body_velocity.Z() << "," << joint_axis.X() << "," << joint_axis.Y() << "," << joint_axis.Z() << "," << body_pose.X() << "," << body_pose.Y() << "," << body_pose.Z() << "," << body_orientation.X() << "," << body_orientation.Y() << "," << body_orientation.Z() << "," << body_orientation.W() << "," << pose_difference.Rot().X() << "," << pose_difference.Rot().Y()<< "," << pose_difference.Rot().Z() << "," << pose_difference.Rot().W() << "," << fuselage_force.X() << "," << fuselage_force.Y() << "," << fuselage_force.Z() << "," << fuselage_torque.X() << "," << fuselage_torque.Y() << "," << fuselage_torque.Z()<< "\n";
+  output_list_.push_back(msg.str());
+  // output_file_ << force << ", " << scalar << ", " << force * scalar << ", " << air_drag.X() << ", " << air_drag.Y() << ", " << air_drag.Z() << ", " << drag_torque_parent_frame.X() << ", " << drag_torque_parent_frame.Y() << ", " << drag_torque_parent_frame.Z() << ", "  << rolling_moment.X() << ", " << rolling_moment.Y() << ", " << rolling_moment.Z() << ", " << ref_motor_rot_vel_ << ", " << ref_motor_rot_vel << "\n";
 }
 
 void GazeboMotorModel::UpdateMotorFail() {
