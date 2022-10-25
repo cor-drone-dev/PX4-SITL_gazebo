@@ -27,7 +27,7 @@ namespace gazebo {
 GazeboMotorModel::~GazeboMotorModel() {
   updateConnection_->~Connection();
   use_pid_ = false;
-  
+
   if (ros_node_handle_) {
 	  ros_node_handle_->shutdown();
 	  delete ros_node_handle_;
@@ -155,6 +155,8 @@ void GazeboMotorModel::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   ros_node_handle_ = new ros::NodeHandle();
   ros_wind_pub_ = ros_node_handle_->advertise<geometry_msgs::Vector3Stamped>("/motor_model_forces", 1);
 
+  ros_model_parameters_sub_ = ros_node_handle_->subscribe("/motor_model_parameters", 1000, &GazeboMotorModel::RosModelParametersCallback, this);
+
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   updateConnection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboMotorModel::OnUpdate, this, _1));
@@ -189,6 +191,31 @@ void GazeboMotorModel::OnUpdate(const common::UpdateInfo& _info) {
   UpdateForcesAndMoments();
   UpdateMotorFail();
   Publish();
+}
+
+void GazeboMotorModel::RosModelParametersCallback(const geometry_msgs::Pose &msg) {
+  const geometry_msgs::Quaternion new_parameters = msg.orientation;
+  if (new_parameters.x > 0) {
+    motor_constant_ = new_parameters.x;
+    std::cout << "Updated motor constant to " << motor_constant_ << std::endl;
+  }
+  if (new_parameters.y > 0) {
+    moment_constant_ = new_parameters.y;
+    std::cout << "Updated moment constant to " << motor_constant_ << std::endl;
+  }
+  if (new_parameters.z > 0) {
+    rotor_drag_coefficient_ = new_parameters.z;
+    std::cout << "Updated rotor drag coefficient to " << motor_constant_ << std::endl;
+  }
+  if (new_parameters.w > 0) {
+    rolling_moment_coefficient_ = new_parameters.w;
+    std::cout << "Updated rolling moment coefficient to " << motor_constant_ << std::endl;
+  }
+
+  // Add support for changing the time constants (needs to reset filter)
+  // const geometry_msgs::Point new_time_constants = msg.position;
+  // if (new_time_constants.x > 0) {
+  // }
 }
 
 void GazeboMotorModel::VelocityCallback(CommandMotorSpeedPtr &rot_velocities) {

@@ -40,7 +40,7 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include "ros/subscribe_options.h"
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Pose.h>
 
 #include <iostream>
 #include <fstream>
@@ -162,6 +162,7 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
 
   ros::NodeHandle* ros_node_handle_;
   ros::Publisher ros_wind_pub_;
+  ros::Subscriber ros_model_parameters_sub_;
 
   ignition::math::Vector3d wind_vel_;
 
@@ -179,6 +180,8 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   void VelocityCallback(CommandMotorSpeedPtr &rot_velocities);
   void MotorFailureCallback(const boost::shared_ptr<const msgs::Int> &fail_msg);  /*!< Callback for the motor_failure_sub_ subscriber */
   void WindVelocityCallback(const boost::shared_ptr<const physics_msgs::msgs::Wind> &msg);
+
+  void RosModelParametersCallback(const geometry_msgs::Pose &msg);
 
   std::unique_ptr<FirstOrderFilter<double>>  rotor_velocity_filter_;
 /*
