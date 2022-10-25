@@ -27,14 +27,11 @@ namespace gazebo {
 GazeboMotorModel::~GazeboMotorModel() {
   updateConnection_->~Connection();
   use_pid_ = false;
-  std::cout << "Writing to file, output size: " << output_list_.size() << std::endl;
-  output_file_.open("/home/michiel/uav_mpcc/model_forces/" + link_name_ + ".csv");
-  output_file_ << "timestamp,raw_thrust,scalar,thrust,rotor_drag_x,rotor_drag_y,rotor_drag_z,rotor_torque,torque_x,torque_y,torque_z,rolling_moment_x,rolling_moment_y,rolling_moment_z,requested_rotor_velocity,actual_rotor_velocity,body_velocity_x,body_velocity_y,body_velocity_z,joint_axis_x,joint_axis_y,joint_axis_z,body_pose_x,body_pose_y,body_pose_z,body_orientation_x,body_orientation_y,body_orientation_z,body_orientation_w,pose_difference_x,pose_difference_y,pose_difference_z,pose_difference_w,fuselage_force_x,fuselage_force_y,fuselage_force_z,fuselage_torque_x,fuselage_torque_y,fuselage_torque_z\n";
-  for (string line : output_list_) {
-    output_file_ << line;
-  }
-  output_file_.close();
-  std::cout << "Done writing to file." << std::endl;
+  
+  if (ros_node_handle_) {
+	  ros_node_handle_->shutdown();
+	  delete ros_node_handle_;
+  };
 }
 
 void GazeboMotorModel::InitializeParams() {}
@@ -153,6 +150,11 @@ void GazeboMotorModel::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
 #if GAZEBO_MAJOR_VERSION < 5
   joint_->SetMaxForce(0, max_force_);
 #endif
+
+  // ROS node handle
+  ros_node_handle_ = new ros::NodeHandle();
+  ros_wind_pub_ = ros_node_handle_->advertise<geometry_msgs::Vector3Stamped>("/motor_model_forces", 1);
+
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   updateConnection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboMotorModel::OnUpdate, this, _1));
@@ -302,10 +304,19 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   ignition::math::Vector3d fuselage_force = fuselage->RelativeForce();
   ignition::math::Vector3d fuselage_torque = fuselage->RelativeTorque();
 
-  std::stringstream msg;
-  msg << prev_sim_time_ << ", " << force << ", " << scalar << ", " << force * scalar << ", " << air_drag.X() << ", " << air_drag.Y() << ", " << air_drag.Z() << ", " << drag_torque.Z() << ", " << drag_torque_parent_frame.X() << ", " << drag_torque_parent_frame.Y() << ", " << drag_torque_parent_frame.Z() << ", "  << rolling_moment.X() << ", " << rolling_moment.Y() << ", " << rolling_moment.Z() << ", " << ref_motor_rot_vel_ << ", " << ref_motor_rot_vel << "," << body_velocity.X() << "," << body_velocity.Y() << "," << body_velocity.Z() << "," << joint_axis.X() << "," << joint_axis.Y() << "," << joint_axis.Z() << "," << body_pose.X() << "," << body_pose.Y() << "," << body_pose.Z() << "," << body_orientation.X() << "," << body_orientation.Y() << "," << body_orientation.Z() << "," << body_orientation.W() << "," << pose_difference.Rot().X() << "," << pose_difference.Rot().Y()<< "," << pose_difference.Rot().Z() << "," << pose_difference.Rot().W() << "," << fuselage_force.X() << "," << fuselage_force.Y() << "," << fuselage_force.Z() << "," << fuselage_torque.X() << "," << fuselage_torque.Y() << "," << fuselage_torque.Z()<< "\n";
-  output_list_.push_back(msg.str());
-  // output_file_ << force << ", " << scalar << ", " << force * scalar << ", " << air_drag.X() << ", " << air_drag.Y() << ", " << air_drag.Z() << ", " << drag_torque_parent_frame.X() << ", " << drag_torque_parent_frame.Y() << ", " << drag_torque_parent_frame.Z() << ", "  << rolling_moment.X() << ", " << rolling_moment.Y() << ", " << rolling_moment.Z() << ", " << ref_motor_rot_vel_ << ", " << ref_motor_rot_vel << "\n";
+  // Publish model forces to ROS topic
+  geometry_msgs::Vector3Stamped wind_v;
+  // Extract time
+  // int time_sec = round(_msg->time_usec()/1000000);
+  // int time_nsec = (_msg->time_usec() - time_sec*1000000)*1000;
+  int time_sec = 0;
+  int time_nsec = 0;
+  wind_v.header.stamp.sec = time_sec;
+  wind_v.header.stamp.nsec = time_nsec;
+  wind_v.vector.x = force;
+  wind_v.vector.y = air_drag.X();
+  wind_v.vector.z = air_drag.Y();
+  ros_wind_pub_.publish(wind_v);
 }
 
 void GazeboMotorModel::UpdateMotorFail() {

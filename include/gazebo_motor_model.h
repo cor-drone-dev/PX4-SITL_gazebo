@@ -36,6 +36,12 @@
 #include "Float.pb.h"
 #include "Wind.pb.h"
 
+#include <ros/callback_queue.h>
+#include <ros/ros.h>
+#include <tf/transform_broadcaster.h>
+#include "ros/subscribe_options.h"
+#include <geometry_msgs/Vector3.h>
+
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -98,7 +104,8 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
         rotor_velocity_slowdown_sim_(kDefaultRotorVelocitySlowdownSim),
         time_constant_down_(kDefaultTimeConstantDown),
         time_constant_up_(kDefaultTimeConstantUp),
-        reversible_(false) {
+        reversible_(false),
+        ros_node_handle_(NULL) {
   }
 
   virtual ~GazeboMotorModel();
@@ -152,6 +159,9 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   transport::SubscriberPtr command_sub_;
   transport::SubscriberPtr motor_failure_sub_; /*!< Subscribing to motor_failure_sub_topic_; receiving motor number to fail, as an integer */
   transport::SubscriberPtr wind_sub_;
+
+  ros::NodeHandle* ros_node_handle_;
+  ros::Publisher ros_wind_pub_;
 
   ignition::math::Vector3d wind_vel_;
 
