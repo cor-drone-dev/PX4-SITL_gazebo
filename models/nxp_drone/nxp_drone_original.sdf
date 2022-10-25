@@ -675,7 +675,7 @@
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
     
-    <include>
+    <!-- <include>
       <uri>model://gps</uri>
       <pose>0 0 0 0 0 0</pose>
       <name>gps0</name>
@@ -683,7 +683,7 @@
     <joint name='gps0_joint' type='fixed'>
       <child>gps0::link</child>
       <parent>fuselage</parent>
-    </joint>
+    </joint> -->
     <plugin name='groundtruth_plugin' filename='libgazebo_groundtruth_plugin.so'>
       <robotNamespace/>
     </plugin>
