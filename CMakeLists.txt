@@ -415,11 +415,6 @@ if (BUILD_ROS_PLUGINS)
   list(APPEND plugins gazebo_motor_failure_plugin)
   message(STATUS "adding gazebo_motor_failure_plugin to build")
 
-  add_library(gazebo_ros_interface_plugin SHARED src/gazebo_ros_interface_plugin.cpp)
-  target_link_libraries(gazebo_ros_interface_plugin ${GAZEBO_libraries} ${roscpp_LIBRARIES})
-  list(APPEND plugins gazebo_ros_interface_plugin)
-  message(STATUS "adding gazebo_ros_interface_plugin to build")
-
   include_directories(
     include
     ${geometry_msgs_INCLUDE_DIRS}
@@ -428,12 +423,6 @@ if (BUILD_ROS_PLUGINS)
   )
 
   target_link_libraries(gazebo_motor_failure_plugin
-    ${catkin_LIBRARIES}
-    ${roscpp_LIBRARIES}
-    ${GAZEBO_libraries}
-  )
-
-  target_link_libraries(gazebo_ros_interface_plugin
     ${catkin_LIBRARIES}
     ${roscpp_LIBRARIES}
     ${GAZEBO_libraries}
