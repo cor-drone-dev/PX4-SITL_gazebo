@@ -15,6 +15,13 @@
           <iyy>0.033</iyy>
           <izz>0.038</izz>
         </inertia>
+        <!-- Inertia from CAD model:
+        <inertia>
+          <ixx>0.0276</ixx>
+          <iyy>0.03</iyy>
+          <izz>0.0395</izz>
+        </inertia>
+        -->
       </inertial>
       <gravity>true</gravity>
       <self_collide>false</self_collide>
