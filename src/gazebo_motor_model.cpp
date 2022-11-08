@@ -201,15 +201,15 @@ void GazeboMotorModel::RosModelParametersCallback(const geometry_msgs::Pose &msg
   }
   if (new_parameters.y > 0) {
     moment_constant_ = new_parameters.y;
-    std::cout << "Updated moment constant to " << motor_constant_ << std::endl;
+    std::cout << "Updated moment constant to " << moment_constant_ << std::endl;
   }
   if (new_parameters.z > 0) {
     rotor_drag_coefficient_ = new_parameters.z;
-    std::cout << "Updated rotor drag coefficient to " << motor_constant_ << std::endl;
+    std::cout << "Updated rotor drag coefficient to " << rotor_drag_coefficient_ << std::endl;
   }
   if (new_parameters.w > 0) {
     rolling_moment_coefficient_ = new_parameters.w;
-    std::cout << "Updated rolling moment coefficient to " << motor_constant_ << std::endl;
+    std::cout << "Updated rolling moment coefficient to " << rolling_moment_coefficient_ << std::endl;
   }
 
   // Add support for changing the time constants (needs to reset filter)
