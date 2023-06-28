@@ -758,5 +758,10 @@
       <accelerometerBiasCorrelationTime>300.0</accelerometerBiasCorrelationTime>
       <accelerometerTurnOnBiasSigma>0.196</accelerometerTurnOnBiasSigma>
     </plugin>
+
+    <plugin name='gazebo_odometry_plugin' filename='libgazebo_odometry_plugin.so'>
+      <robotNamespace/>
+    </plugin>
+    
   </model>
 </sdf>
