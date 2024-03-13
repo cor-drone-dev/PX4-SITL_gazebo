@@ -204,6 +204,20 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
     force = std::abs(force);
   }
 
+  // 50 % overshoot so we are going to reduce the force to 66% of the original value
+  // 5.5 is hoverthrust value with mass 2.2 kg en 4 rotors
+  //ignition::math::Vector3d body_force = link_->WorldForce();
+
+
+
+  // if (body_force.Z() < 0){
+  //   double force_slowdown = (body_force.Z())*0.33 * 0.25;
+  //   //force_slowdown = force_slowdown * 0.25; // 25% of the force due to 4 rotors
+  //   std::cout << "force_slowdown_ = " << force_slowdown << std::endl;
+  //   ignition::math::Vector3d force_rectivy = ignition::math::Vector3d(0, 0, force_slowdown);
+  //   //link_->AddForce(force_rectivy);
+  // }
+
   // scale down force linearly with forward speed
   // XXX this has to be modelled better
   //
@@ -215,10 +229,16 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   ignition::math::Vector3d joint_axis = ignitionFromGazeboMath(joint_->GetGlobalAxis(0));
 #endif
 
+  
+
+
+
+
+
   ignition::math::Vector3d relative_wind_velocity = body_velocity - wind_vel_;
   ignition::math::Vector3d velocity_parallel_to_rotor_axis = (relative_wind_velocity.Dot(joint_axis)) * joint_axis;
   double vel = velocity_parallel_to_rotor_axis.Length();
-  double scalar = 1 - vel / 25.0; // at 25 m/s the rotor will not produce any force anymore
+  double scalar = 1 - vel / 1025.0; // at 25 m/s the rotor will not produce any force anymore
   scalar = ignition::math::clamp(scalar, 0.0, 1.0);
   // Apply a force to the link.
   link_->AddRelativeForce(ignition::math::Vector3d(0, 0, force * scalar));
@@ -252,6 +272,7 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   // Apply the filter on the motor's velocity.
   double ref_motor_rot_vel;
   ref_motor_rot_vel = rotor_velocity_filter_->updateFilter(ref_motor_rot_vel_, sampling_time_);
+
 
 #if 0 //FIXME: disable PID for now, it does not play nice with the PX4 CI system.
   if (use_pid_)
