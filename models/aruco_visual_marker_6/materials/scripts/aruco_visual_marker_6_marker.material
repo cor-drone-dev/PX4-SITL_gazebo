@@ -1,0 +1,13 @@
+material ArucoVisualMarker6/Marker
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture gray_background_smaller_dots.png
+			}
+		}
+	}
+}

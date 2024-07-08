@@ -1,0 +1,35 @@
+<sdf version="1.7">
+  <model name="landing_platform">
+    <static>true</static>
+    <link name="base_link">
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.3 0.3 0.01</size>
+          </box>
+        </geometry>
+        <friction>
+          <ode>
+            <mu>100.0</mu>
+            <mu2>100.0</mu2>
+          </ode>
+        </friction>
+        <pose>0 0 1.5 0 0 0</pose>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.3 0.3 0.01</size>
+          </box>
+        </geometry>
+        <pose>0 0 1.5 0 0 0</pose>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Orange</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

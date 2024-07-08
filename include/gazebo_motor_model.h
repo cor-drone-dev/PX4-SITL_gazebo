@@ -136,6 +136,7 @@ class GazeboMotorModel : public MotorModel, public ModelPlugin {
   double rotor_velocity_slowdown_sim_;
   double time_constant_down_;
   double time_constant_up_;
+  double sim_time_for_logfile;
 
   bool reversible_;
 

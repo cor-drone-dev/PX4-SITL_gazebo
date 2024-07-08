@@ -21,6 +21,8 @@
 
 #include "gazebo_motor_model.h"
 #include <ignition/math.hh>
+#include <fstream>
+#include <sstream>
 
 namespace gazebo {
 
@@ -176,6 +178,7 @@ void GazeboMotorModel::testProto(MotorSpeedPtr &msg) {
 void GazeboMotorModel::OnUpdate(const common::UpdateInfo& _info) {
   sampling_time_ = _info.simTime.Double() - prev_sim_time_;
   prev_sim_time_ = _info.simTime.Double();
+  sim_time_for_logfile = _info.simTime.Double();
   UpdateForcesAndMoments();
   UpdateMotorFail();
   Publish();
@@ -198,25 +201,24 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
     gzerr << "Aliasing on motor [" << motor_number_ << "] might occur. Consider making smaller simulation time steps or raising the rotor_velocity_slowdown_sim_ param.\n";
   }
   double real_motor_velocity = motor_rot_vel_ * rotor_velocity_slowdown_sim_;
+  //std::cout << "Motor number [" << motor_number_ << "] velocity: " << real_motor_velocity << std::endl;
   double force = real_motor_velocity * std::abs(real_motor_velocity) * motor_constant_;
   if(!reversible_) {
     // Not allowed to have negative thrust.
     force = std::abs(force);
-  }
+    }
+  //_info.simTime.Double() "Motor number [" << motor_number_ <<velocity: " << real_motor_velocity
+  std::ofstream logfile_gazebo_motor_model;
+                logfile_gazebo_motor_model.open("/root/dev/catkin_ws/src/files/logfile_gazebo_motor_model.csv", std::ios_base::app);
+                if (logfile_gazebo_motor_model.is_open()) {
+                    //log marker id
+                    logfile_gazebo_motor_model << sim_time_for_logfile << ",";
+                    logfile_gazebo_motor_model << motor_number_ << ",";
+                    logfile_gazebo_motor_model << real_motor_velocity << "\n"; 
+                logfile_gazebo_motor_model.close();
+                }
 
-  // 50 % overshoot so we are going to reduce the force to 66% of the original value
-  // 5.5 is hoverthrust value with mass 2.2 kg en 4 rotors
-  //ignition::math::Vector3d body_force = link_->WorldForce();
-
-
-
-  // if (body_force.Z() < 0){
-  //   double force_slowdown = (body_force.Z())*0.33 * 0.25;
-  //   //force_slowdown = force_slowdown * 0.25; // 25% of the force due to 4 rotors
-  //   std::cout << "force_slowdown_ = " << force_slowdown << std::endl;
-  //   ignition::math::Vector3d force_rectivy = ignition::math::Vector3d(0, 0, force_slowdown);
-  //   //link_->AddForce(force_rectivy);
-  // }
+  
 
   // scale down force linearly with forward speed
   // XXX this has to be modelled better
@@ -229,14 +231,10 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   ignition::math::Vector3d joint_axis = ignitionFromGazeboMath(joint_->GetGlobalAxis(0));
 #endif
 
-  
-
-
-
-
-
   ignition::math::Vector3d relative_wind_velocity = body_velocity - wind_vel_;
+  //std::cout <<"body_velocity: " << body_velocity << std::endl;
   ignition::math::Vector3d velocity_parallel_to_rotor_axis = (relative_wind_velocity.Dot(joint_axis)) * joint_axis;
+  //std::cout << "Velocity parallel to rotor axis: " << velocity_parallel_to_rotor_axis << std::endl;
   double vel = velocity_parallel_to_rotor_axis.Length();
   double scalar = 1 - vel / 1025.0; // at 25 m/s the rotor will not produce any force anymore
   scalar = ignition::math::clamp(scalar, 0.0, 1.0);
@@ -248,7 +246,10 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   // The True Role of Accelerometer Feedback in Quadrotor Control
   // - \omega * \lambda_1 * V_A^{\perp}
   ignition::math::Vector3d velocity_perpendicular_to_rotor_axis = relative_wind_velocity - (relative_wind_velocity.Dot(joint_axis)) * joint_axis;
+  //std::cout << "joint axis" << joint_axis << std::endl;
+  //std::cout << "Velocity perpendicular to rotor axis: " << velocity_perpendicular_to_rotor_axis << std::endl;
   ignition::math::Vector3d air_drag = -std::abs(real_motor_velocity) * rotor_drag_coefficient_ * velocity_perpendicular_to_rotor_axis;
+  //std::cout << "Air drag: " << air_drag << std::endl;
   // Apply air_drag to link.
   link_->AddForce(air_drag);
   // Moments
@@ -261,18 +262,20 @@ void GazeboMotorModel::UpdateForcesAndMoments() {
   ignition::math::Pose3d pose_difference = ignitionFromGazeboMath(link_->GetWorldCoGPose() - parent_links.at(0)->GetWorldCoGPose());
 #endif
   ignition::math::Vector3d drag_torque(0, 0, -turning_direction_ * force * moment_constant_);
+  //std::cout << "Drag torque: " << drag_torque << std::endl;
   // Transforming the drag torque into the parent frame to handle arbitrary rotor orientations.
   ignition::math::Vector3d drag_torque_parent_frame = pose_difference.Rot().RotateVector(drag_torque);
+  //std::cout << "Drag torque in parent frame: " << drag_torque_parent_frame << std::endl;
   parent_links.at(0)->AddRelativeTorque(drag_torque_parent_frame);
 
   ignition::math::Vector3d rolling_moment;
   // - \omega * \mu_1 * V_A^{\perp}
   rolling_moment = -std::abs(real_motor_velocity) * rolling_moment_coefficient_ * velocity_perpendicular_to_rotor_axis;
+  //std::cout << "Rolling moment: " << rolling_moment << std::endl; 
   parent_links.at(0)->AddTorque(rolling_moment);
   // Apply the filter on the motor's velocity.
   double ref_motor_rot_vel;
   ref_motor_rot_vel = rotor_velocity_filter_->updateFilter(ref_motor_rot_vel_, sampling_time_);
-
 
 #if 0 //FIXME: disable PID for now, it does not play nice with the PX4 CI system.
   if (use_pid_)
